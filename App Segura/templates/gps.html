@@ -1,0 +1,169 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 style="text-align: center; font-weight: bold; font-size: 1.8rem;">🚶‍♂️ Ubicación y Ruta Segura</h2>
+
+<div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2rem; justify-content: center;">
+  <!-- Controles + Mapa -->
+  <div style="flex: 2; min-width: 320px;">
+    <ion-button  class="green-matte" expand="block" onclick="obtenerUbicacion()">📍 Usar mi ubicación</ion-button>
+
+    <label for="destino" style="margin-top: 0.8rem; font-weight: bold;">Dirección de destino:</label>
+    <input type="text" id="destino" placeholder="Ej: Calle 10 #5-25, Bogotá" 
+      style="width: 100%; padding: 0.7rem; margin-bottom: 1rem; border: 1px solid #5f8a2b; border-radius: 8px;">
+
+    <ion-button class="green-matte" expand="block" onclick="trazarRuta()">🧭 Trazar Ruta</ion-button>
+
+    <p style="font-size: 0.9rem; color: #555;">📌 También puedes hacer clic en el mapa para seleccionar tu destino.</p>
+
+    <div id="map" style="width: 100%; height: 500px; margin-top: 1rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+  </div>
+
+  <!-- Detalles -->
+  <div style="flex: 1; min-width: 320px; max-height: 600px; overflow-y: auto; padding: 1rem; border-radius: 12px; background: #f8f7f7; box-shadow: 0 4px 10px rgba(61, 53, 53, 0.1);">
+    <h3 style="margin: 0;">📝 Detalles de la Ruta</h3>
+    <div id="ruta-detalle" style="margin-top: 0.5rem; font-size: 0.9rem; line-height: 1.6;"></div>
+    <p id="mensaje-final" style="margin-top: 1rem; font-weight: bold; color: green;"></p>
+
+    <!-- Botones al lado -->
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+      <ion-button color="warning" onclick="guardarRuta()">💾 Guardar Ruta</ion-button>
+      <ion-button color="medium" onclick="finalizarRuta()">✅ Finalizar</ion-button>
+    </div>
+  </div>
+</div>
+
+<!-- Mapbox -->
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.css" rel="stylesheet" />
+
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1IjoiYWxleDA0cml2ZXJvcyIsImEiOiJjbWR2dGpwejIwdmo2Mm1xMzEycGRpY2UzIn0.IYfRmStw-OBDTuup87ql6Q';
+  let userCoords = null;
+  let destinoCoord = null;
+  let map = null;
+  let destinoMarker = null;
+  let instrucciones = [];
+
+  function obtenerUbicacion() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        userCoords = [pos.coords.longitude, pos.coords.latitude];
+        mostrarMapa(userCoords);
+      }, err => alert("Error obteniendo ubicación: " + err.message));
+    } else {
+      alert("Tu navegador no soporta geolocalización.");
+    }
+  }
+
+  function mostrarMapa(coord) {
+    map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: coord,
+      zoom: 13
+    });
+
+    new mapboxgl.Marker({ color: 'blue' })
+      .setLngLat(coord)
+      .setPopup(new mapboxgl.Popup().setText("📍 Estás aquí"))
+      .addTo(map);
+
+    map.on('click', e => {
+      destinoCoord = [e.lngLat.lng, e.lngLat.lat];
+      document.getElementById("destino").value = `Seleccionado en el mapa (${destinoCoord[1].toFixed(5)}, ${destinoCoord[0].toFixed(5)})`;
+      marcarDestino(destinoCoord);
+    });
+  }
+
+  function marcarDestino(coord) {
+    if (destinoMarker) destinoMarker.remove();
+    destinoMarker = new mapboxgl.Marker({ color: 'green' })
+      .setLngLat(coord)
+      .setPopup(new mapboxgl.Popup().setText("🎯 Destino seleccionado"))
+      .addTo(map);
+  }
+
+  async function trazarRuta() {
+    const detalleRuta = document.getElementById('ruta-detalle');
+    detalleRuta.innerHTML = "";
+    document.getElementById("mensaje-final").textContent = "";
+    instrucciones = [];
+
+    if (!userCoords) return alert("Primero debes obtener tu ubicación actual.");
+    if (!destinoCoord) {
+      const texto = document.getElementById('destino').value.trim();
+      if (!texto) return alert("Por favor, escribe o selecciona una dirección.");
+      const geoResp = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(texto)}.json?access_token=${mapboxgl.accessToken}&language=es`);
+      const geoData = await geoResp.json();
+      if (!geoData.features.length) return alert("Dirección no encontrada.");
+      destinoCoord = geoData.features[0].geometry.coordinates;
+      marcarDestino(destinoCoord);
+    }
+
+    const rutaUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${userCoords.join(',')};${destinoCoord.join(',')}?steps=true&geometries=geojson&language=es&access_token=${mapboxgl.accessToken}`;
+    const rutaResp = await fetch(rutaUrl);
+    const rutaData = await rutaResp.json();
+
+    if (!rutaData.routes || !rutaData.routes.length) return alert("No se pudo calcular la ruta.");
+
+    const pasos = rutaData.routes[0].legs[0].steps;
+    pasos.forEach((step, i) => {
+      const instruccion = `Paso ${i + 1}: ${step.maneuver.instruction}`;
+      instrucciones.push(instruccion);
+      detalleRuta.innerHTML += `<p><strong>${instruccion}</strong></p>`;
+    });
+
+    const geojson = rutaData.routes[0].geometry;
+    if (map.getSource('ruta')) {
+      map.getSource('ruta').setData(geojson);
+    } else {
+      map.addSource('ruta', {
+        type: 'geojson',
+        data: geojson
+      });
+      map.addLayer({
+        id: 'ruta',
+        type: 'line',
+        source: 'ruta',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': '#0074D9', 'line-width': 5 }
+      });
+    }
+  }
+
+  function finalizarRuta() {
+    instrucciones = [];
+    destinoCoord = null;
+    document.getElementById("destino").value = "";
+    document.getElementById("mensaje-final").textContent = "✅ Has finalizado la ruta. ¡Buen trabajo!";
+    document.getElementById("ruta-detalle").innerHTML = "";
+    if (map.getLayer('ruta')) map.removeLayer('ruta');
+    if (map.getSource('ruta')) map.removeSource('ruta');
+    if (destinoMarker) destinoMarker.remove();
+    new mapboxgl.Marker({ color: 'blue' })
+      .setLngLat(userCoords)
+      .setPopup(new mapboxgl.Popup().setText("📍 Estás aquí"))
+      .addTo(map);
+  }
+
+  function guardarRuta() {
+    if (!userCoords || !destinoCoord || instrucciones.length === 0) {
+      alert("Debes trazar una ruta antes de guardarla.");
+      return;
+    }
+
+    const ruta = {
+      origen: userCoords,
+      destino: destinoCoord,
+      instrucciones: instrucciones,
+      fecha: new Date().toISOString()
+    };
+
+    let rutasGuardadas = JSON.parse(localStorage.getItem("rutasGuardadas") || "[]");
+    rutasGuardadas.push(ruta);
+    localStorage.setItem("rutasGuardadas", JSON.stringify(rutasGuardadas));
+
+    alert("✅ Ruta guardada correctamente");
+  }
+</script>
+{% endblock %}

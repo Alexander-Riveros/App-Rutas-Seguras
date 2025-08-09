@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proyecto</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Ionic CDN -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core@7.0.0/dist/ionic/ionic.esm.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core@7.0.0/dist/ionic/ionic.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@ionic/core@7.0.0/css/ionic.bundle.css" rel="stylesheet" />
+
+    <!-- Mapbox -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
+    <style>
+      #map {
+        height: 300px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <ion-app>
+      <ion-menu content-id="main-content">
+        <ion-header>
+          <ion-toolbar color="success">
+            <ion-title>Menú</ion-title>
+          </ion-toolbar>
+        </ion-header>
+       <ion-content>
+  <ion-list>
+    <ion-item href="/home">Inicio</ion-item>
+    <ion-item href="/gps">Ubicación GPS</ion-item>
+    <ion-item href="/camara">Cámara</ion-item>
+    <ion-item href="/rutas">Mis rutas</ion-item>
+    <ion-item href="/perfil.html">Mi Perfil</ion-item>
+  </ion-list>
+
+</ion-content>
+      </ion-menu>
+
+      <div class="ion-page" id="main-content">
+        <ion-header>
+          <ion-toolbar color="success">
+            <ion-buttons slot="start">
+              <ion-menu-button></ion-menu-button>
+            </ion-buttons>
+            <ion-title>App Rutas Seguras</ion-title>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content class="ion-padding">
+          {% block content %}
+          {% endblock %}
+        </ion-content>
+      <ion-footer>
+    <ion-toolbar color="success" class="custom-footer">
+      <ion-title class="footer-title">© 2025 SafeRoute - Todos los derechos reservados</ion-title>
+    </ion-toolbar>
+    </ion-footer>
+
+      </div>
+
+    </ion-app>
+  </body>
+</html>

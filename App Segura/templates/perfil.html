@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<ion-content class="ion-padding">
+  <ion-card color="light">
+    <ion-card-header>
+      <ion-card-title style="text-align: center;">👤 Mi Perfil</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+
+      <ion-text color="success">
+        <h3 style="text-align: center;">¡Bienvenido/a, {{ nombre }}!</h3>
+      </ion-text>
+      <hr>
+
+      <ion-item>
+        <ion-label position="stacked">Nombre</ion-label>
+        <ion-text color="dark"><p>{{ nombre }}</p></ion-text>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Correo Electrónico</ion-label>
+        <ion-text color="dark"><p>{{ correo }}</p></ion-text>
+      </ion-item>
+
+      <ion-button expand="block" color="danger" onclick="window.location.href='/logout'">
+        Cerrar Sesión
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</ion-content>
+
+{% endblock %}

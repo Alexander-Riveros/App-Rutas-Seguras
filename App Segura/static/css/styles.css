@@ -1,0 +1,46 @@
+/* Encabezado */
+header {
+  background-color: #c8e692;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* Título h2 */
+h2 {
+  color: #006400;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 1.8rem;
+}
+
+/* Botón verde personalizado */
+ion-button.green-matte {
+  --background: #33c96f !important;
+  --color: rgb(253, 250, 250) !important;
+}
+
+/* Estilo video y mapa */
+#video, #map {
+  width: 100%;
+  max-width: 500px;
+  border: 2px solid #3e5c06;
+  border-radius: 8px;
+  display: block;
+  margin: 26px auto;
+}
+
+/* Estilo miniaturas */
+#ultimas-fotos img {
+  width: 100%;
+  max-width: 160px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  object-fit: cover;
+}
+
+/* Toast verde */
+ion-toast .toast-wrapper {
+  --background: #0f9e22;
+  --color: white;
+}

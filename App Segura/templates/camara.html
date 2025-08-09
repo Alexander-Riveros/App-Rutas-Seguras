@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>📷 Cámara de Seguridad</h2>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-top: 1rem;">
+
+  <!-- Cámara -->
+  <div style="flex: 1; min-width: 320px; max-width: 480px;">
+    <ion-button class="green-matte" expand="block" onclick="activarCamara()">🎥 Activar Cámara</ion-button>
+
+    <video id="video" autoplay playsinline></video>
+
+    <ion-button class="green-matte" expand="block"  onclick="tomarFoto()">📸 Tomar Foto</ion-button>
+    
+    <!-- Eliminado canvas visible -->
+    <canvas id="foto" style="display: none;"></canvas>
+  </div>
+
+  <!-- Vista previa en 2 columnas -->
+  <div style="flex: 1; min-width: 320px;">
+    <h3 style="text-align: center;">🖼️ Últimas Fotos</h3>
+    <div id="ultimas-fotos"
+         style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; justify-items: center;">
+    </div>
+  </div>
+</div>
+
+<script>
+  let stream;
+
+  async function activarCamara() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      document.getElementById('video').srcObject = stream;
+    } catch (err) {
+      alert("Error al acceder a la cámara: " + err.message);
+    }
+  }
+
+  function tomarFoto() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('foto');
+    const context = canvas.getContext('2d');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const base64 = canvas.toDataURL('image/png');
+
+    fetch('/guardar_foto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imagen: base64 })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.mensaje || 'Foto guardada correctamente.');
+      agregarMiniatura(base64);
+    })
+    .catch(err => {
+      alert("Error al guardar la foto: " + err.message);
+    });
+  }
+
+  function agregarMiniatura(base64) {
+  const contenedor = document.getElementById("ultimas-fotos");
+
+  // Crear imagen
+  const img = document.createElement("img");
+  img.src = base64;
+  img.alt = "Foto tomada";
+  img.style.width = "100%";
+  img.style.maxWidth = "200px";  // Aumentado tamaño
+  img.style.height = "auto";
+  img.style.borderRadius = "8px";
+  img.style.boxShadow = "0 1px 4px rgba(0,0,0,0.1)";
+  img.style.objectFit = "cover";
+
+  // Contenedor individual
+  const contenedorImg = document.createElement("div");
+  contenedorImg.style.width = "100%";
+  contenedorImg.style.maxWidth = "200px";  // Aumentado tamaño
+  contenedorImg.style.border = "1px solid #ccc";
+  contenedorImg.style.borderRadius = "8px";
+  contenedorImg.style.padding = "4px";
+  contenedorImg.style.backgroundColor = "#fdfdfd";
+  contenedorImg.style.margin = "0";  // Eliminado espacio excesivo
+
+  contenedorImg.appendChild(img);
+  contenedor.prepend(contenedorImg);
+
+  // Mantener solo las últimas 4
+  while (contenedor.childElementCount > 4) {
+    contenedor.removeChild(contenedor.lastChild);
+  }
+}
+
+</script>
+{% endblock %}

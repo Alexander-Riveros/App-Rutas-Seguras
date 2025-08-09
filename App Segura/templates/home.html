@@ -1,0 +1,152 @@
+
+
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h2><center><p>Bienvenido a vivir la experiencia con App Rutas Seguras</p></center></h2>
+<hr />
+
+<ion-content color="light" class="ion-padding">
+
+  <!-- Iniciar Sesión -->
+  <ion-card style="--ion-color-base: #a5d6a7;">
+    <ion-card-header>
+      <ion-card-title class="ion-text-center" style="color: black;">
+        Iniciar Sesión
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item lines="full">
+        <ion-label position="floating">Correo Electrónico</ion-label>
+        <ion-input id="username" color="dark"></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" color="dark" onclick="login()">
+        Iniciar Sesión
+      </ion-button>
+
+      <div id="resultado" class="ion-text-center" style="margin-top: 20px; color: black;"></div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Registro -->
+  <ion-card style="--ion-color-base: #e8f5e9;">
+    <ion-card-header>
+      <ion-card-title class="ion-text-center" style="color: #2e7d32;">
+        ¿Eres nuevo? Regístrate
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+
+      <ion-item lines="full">
+        <ion-label position="floating">Nombre Completo</ion-label>
+        <ion-input id="nombre" required color="dark"></ion-input>
+      </ion-item>
+
+      <ion-item lines="full">
+        <ion-label position="floating">Correo Electrónico</ion-label>
+        <ion-input id="correo" type="email" required color="dark"></ion-input>
+      </ion-item>
+
+      <ion-item lines="full">
+        <ion-label position="floating">Contraseña</ion-label>
+        <ion-input id="clave" type="password" required color="dark"></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" color="success" onclick="registrar()">
+        Registrar
+      </ion-button>
+      <ion-button expand="block" color="medium" fill="outline" onclick="mostrarAyuda()">
+        Ayuda
+      </ion-button>
+
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>
+
+<!-- ✅ Script funcional JS -->
+<script>
+  async function registrar() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const clave = document.getElementById('clave').value.trim();
+
+    if (!nombre || !correo || !clave) {
+      mostrarToast("Completa todos los campos.", "danger");
+      return;
+    }
+
+    try {
+      const res = await fetch('/registrar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, correo, clave })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        mostrarToast(data.mensaje, "success");
+        limpiarFormulario();
+      } else {
+        mostrarToast(data.error || "Error al registrar.", "danger");
+      }
+    } catch (error) {
+      mostrarToast("Error de conexión con el servidor", "danger");
+    }
+  }
+
+  async function login() {
+    const correo = document.getElementById("username").value.trim();
+    const resultado = document.getElementById("resultado");
+
+    if (!correo) {
+      mostrarToast("Debes ingresar un correo.", "danger");
+      return;
+    }
+
+    try {
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        // Redireccionar a perfil.html si el login es exitoso
+        window.location.href = "/perfil.html";
+      } else {
+        resultado.innerHTML = `<ion-card color="danger"><ion-card-content>${data.error}</ion-card-content></ion-card>`;
+      }
+    } catch (error) {
+      resultado.innerHTML = `<ion-card color="danger"><ion-card-content>Error de conexión</ion-card-content></ion-card>`;
+    }
+  }
+
+
+  function mostrarToast(mensaje, color) {
+    const toast = document.createElement('ion-toast');
+    toast.message = mensaje;
+    toast.duration = 2500;
+    toast.color = color;
+    toast.position = 'bottom';
+    document.body.appendChild(toast);
+    toast.present();
+  }
+
+  function limpiarFormulario() {
+    document.getElementById('nombre').value = '';
+    document.getElementById('correo').value = '';
+    document.getElementById('clave').value = '';
+  }
+
+  function mostrarAyuda() {
+    alert("Ingresa tus datos y haz clic en Registrar para crear tu cuenta. Usa tu correo para iniciar sesión.");
+  }
+</script>
+
+{% endblock %}
+
+

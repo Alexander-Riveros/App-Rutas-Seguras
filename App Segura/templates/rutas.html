@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2 style="text-align: center; font-weight: bold; font-size: 1.8rem;">📑 Rutas Guardadas</h2>
+
+<div style="max-width: 800px; margin: auto; margin-top: 2rem;">
+  <div id="contenedor-rutas">
+    <!-- Las rutas se cargarán aquí -->
+  </div>
+
+  <div style="text-align: center; margin-top: 2rem;">
+    <ion-button color="medium" onclick="borrarRutas()">🗑️ Borrar Todas</ion-button>
+  </div>
+</div>
+
+<script>
+  function cargarRutas() {
+    const contenedor = document.getElementById('contenedor-rutas');
+    contenedor.innerHTML = '';
+    const rutas = JSON.parse(localStorage.getItem("rutasGuardadas") || "[]");
+
+    if (rutas.length === 0) {
+      contenedor.innerHTML = "<p style='text-align: center;'>No hay rutas guardadas.</p>";
+      return;
+    }
+
+    rutas.forEach((ruta, index) => {
+      const div = document.createElement("div");
+      div.style = "border: 1px solid #ccc; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; background: #f9f9f9";
+
+      div.innerHTML = `
+        <h4>🧭 Ruta ${index + 1}</h4>
+        <p><strong>📍 Origen:</strong> (${ruta.origen[1].toFixed(5)}, ${ruta.origen[0].toFixed(5)})</p>
+        <p><strong>🎯 Destino:</strong> (${ruta.destino[1].toFixed(5)}, ${ruta.destino[0].toFixed(5)})</p>
+        <p><strong>📅 Fecha:</strong> ${new Date(ruta.fecha).toLocaleString()}</p>
+        <details style="margin-top: 0.5rem;">
+          <summary>📋 Ver Instrucciones</summary>
+          <ul style="margin-top: 0.5rem;">
+            ${ruta.instrucciones.map(inst => `<li>${inst}</li>`).join('')}
+          </ul>
+        </details>
+      `;
+      contenedor.appendChild(div);
+    });
+  }
+
+  function borrarRutas() {
+    if (confirm("¿Estás seguro de que deseas borrar todas las rutas guardadas?")) {
+      localStorage.removeItem("rutasGuardadas");
+      cargarRutas();
+    }
+  }
+
+  window.onload = cargarRutas;
+</script>
+{% endblock %}
